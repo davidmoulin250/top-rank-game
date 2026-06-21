@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Top 10 Showdown</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bungee&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- MODE PICKER -->
+    <section id="screen-mode" class="screen active">
+      <div class="hero">
+        <h1 class="title"><span>TOP</span><span class="ten">10</span><span>SHOWDOWN</span></h1>
+        <p class="subtitle">Name the top 10. Beat your opponent. Argue later.</p>
+      </div>
+      <div class="mode-grid">
+        <button class="mode-card" data-mode="local">
+          <div class="mode-emoji">🛋️</div>
+          <div class="mode-title">Same screen</div>
+          <div class="mode-desc">Two players, one device. Take turns.</div>
+        </button>
+        <button class="mode-card" data-mode="online">
+          <div class="mode-emoji">🌍</div>
+          <div class="mode-title">Online room</div>
+          <div class="mode-desc">Play with a friend anywhere. Share a code or link.</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- LOCAL WELCOME -->
+    <section id="screen-welcome" class="screen">
+      <div class="back-row">
+        <button class="link-btn back" data-goto="screen-mode">← Mode</button>
+      </div>
+      <div class="hero compact">
+        <h2 class="hero-h2">Same-screen game</h2>
+        <p class="subtitle">Pass the keyboard each turn.</p>
+      </div>
+      <div class="card">
+        <label class="field">
+          <span>Player 1</span>
+          <input id="input-p1" type="text" maxlength="20" placeholder="Your name" autocomplete="off" />
+        </label>
+        <div class="vs">VS</div>
+        <label class="field">
+          <span>Player 2</span>
+          <input id="input-p2" type="text" maxlength="20" placeholder="Their name" autocomplete="off" />
+        </label>
+        <div class="settings">
+          <label class="setting">
+            <span>Seconds per turn</span>
+            <select id="input-seconds">
+              <option value="45">45s</option>
+              <option value="60" selected>60s</option>
+              <option value="90">90s</option>
+              <option value="120">120s</option>
+            </select>
+          </label>
+        </div>
+        <button id="btn-start" class="big-btn primary">START GAME</button>
+        <button id="btn-resume" class="link-btn" hidden>Resume previous game</button>
+      </div>
+    </section>
+
+    <!-- ONLINE ENTRY (create or join) -->
+    <section id="screen-online" class="screen">
+      <div class="back-row">
+        <button class="link-btn back" data-goto="screen-mode">← Mode</button>
+      </div>
+      <div class="hero compact">
+        <h2 class="hero-h2">Online game</h2>
+        <p class="subtitle">Create a room or join one with a code.</p>
+      </div>
+
+      <div class="card">
+        <label class="field">
+          <span>Your name</span>
+          <input id="online-name" type="text" maxlength="20" placeholder="What should we call you?" autocomplete="off" />
+        </label>
+
+        <div class="online-options">
+          <div class="online-block">
+            <h3 class="block-title">Create a new room</h3>
+            <p class="block-sub">You'll get a code to share.</p>
+            <label class="setting">
+              <span>Seconds per turn</span>
+              <select id="online-seconds">
+                <option value="45">45s</option>
+                <option value="60" selected>60s</option>
+                <option value="90">90s</option>
+                <option value="120">120s</option>
+              </select>
+            </label>
+            <button id="btn-create-room" class="big-btn primary">CREATE ROOM</button>
+          </div>
+
+          <div class="online-divider"><span>or</span></div>
+
+          <div class="online-block">
+            <h3 class="block-title">Join a room</h3>
+            <p class="block-sub">Enter the 4-character code your friend sent.</p>
+            <input id="online-code" class="code-input" type="text" maxlength="4" placeholder="ABCD" autocomplete="off" />
+            <button id="btn-join-room" class="big-btn ghost">JOIN ROOM</button>
+          </div>
+        </div>
+
+        <div id="online-error" class="online-error" hidden></div>
+      </div>
+    </section>
+
+    <!-- ONLINE LOBBY (room created, waiting for guest) -->
+    <section id="screen-lobby" class="screen">
+      <div class="round-pill">Room</div>
+      <div class="lobby-code-card">
+        <div class="lobby-label">Share this code with your friend</div>
+        <div class="lobby-code" id="lobby-code">····</div>
+        <div class="lobby-link-row">
+          <input id="lobby-link" readonly />
+          <button id="btn-copy-link" class="small-btn">Copy link</button>
+        </div>
+      </div>
+
+      <div class="lobby-players">
+        <div class="lobby-player" id="lobby-p1">
+          <div class="lobby-dot p1"></div>
+          <div class="lobby-pname" id="lobby-p1-name">…</div>
+          <div class="lobby-prole">Host</div>
+        </div>
+        <div class="lobby-vs">VS</div>
+        <div class="lobby-player waiting" id="lobby-p2">
+          <div class="lobby-dot p2"></div>
+          <div class="lobby-pname" id="lobby-p2-name">Waiting…</div>
+          <div class="lobby-prole">Guest</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btn-lobby-leave" class="big-btn ghost">Leave room</button>
+        <button id="btn-lobby-start" class="big-btn primary" disabled>START GAME</button>
+      </div>
+    </section>
+
+    <!-- CATEGORY REVEAL -->
+    <section id="screen-category" class="screen">
+      <div class="round-pill">Round <span id="round-num">1</span></div>
+      <div class="category-card">
+        <div class="category-tag" id="cat-tag">Category</div>
+        <h2 class="category-prompt" id="cat-prompt">…</h2>
+        <p class="category-hint" id="cat-hint"></p>
+      </div>
+      <div class="scoreboard mini" id="cat-scoreboard"></div>
+      <div class="actions" id="cat-actions">
+        <button id="btn-skip" class="big-btn ghost">Skip this one</button>
+        <button id="btn-play" class="big-btn primary">Let's play →</button>
+      </div>
+      <div id="cat-waiting" class="waiting-banner" hidden>Waiting for host…</div>
+      <button id="btn-end-1" class="link-btn danger">End game</button>
+    </section>
+
+    <!-- HANDOFF (local only) -->
+    <section id="screen-handoff" class="screen">
+      <div class="handoff-card">
+        <h2>Pass the keyboard</h2>
+        <p class="big-name" id="handoff-name">Player 2</p>
+        <p class="muted">Other player — look away! 👀</p>
+        <button id="btn-ready" class="big-btn primary">I'M READY</button>
+      </div>
+    </section>
+
+    <!-- TURN -->
+    <section id="screen-turn" class="screen">
+      <header class="turn-header">
+        <div class="turn-player">
+          <span class="dot" id="turn-dot"></span><span id="turn-name">…</span><span>’s turn</span>
+        </div>
+        <div class="turn-timer" id="turn-timer">60</div>
+        <div class="turn-score">
+          <span id="turn-found">0</span> / <span id="turn-total">10</span>
+        </div>
+      </header>
+      <div class="opponent-bar" id="opponent-bar" hidden>
+        <span class="opp-label">Opponent <span id="opp-name">…</span>:</span>
+        <span class="opp-count"><span id="opp-found">0</span> / <span id="opp-total">10</span></span>
+        <span class="opp-status" id="opp-status">playing</span>
+      </div>
+      <div class="turn-prompt">
+        <div class="tag" id="turn-tag">Category</div>
+        <h3 id="turn-prompt-text">…</h3>
+        <p class="hint" id="turn-hint"></p>
+      </div>
+      <form id="turn-form" class="answer-form" autocomplete="off">
+        <input id="turn-input" type="text" placeholder="Type an answer and hit Enter" autofocus />
+      </form>
+      <div class="feedback" id="turn-feedback"></div>
+      <ul class="found-list" id="turn-found-list"></ul>
+      <button id="btn-finish-turn" class="link-btn">Finish my turn early</button>
+    </section>
+
+    <!-- WAITING FOR OPPONENT (online: I finished, they didn't) -->
+    <section id="screen-waiting" class="screen">
+      <div class="waiting-card">
+        <div class="spinner"></div>
+        <h2>Nice round!</h2>
+        <p>You scored <span id="waiting-my-score" class="big">0</span> points.</p>
+        <p class="muted">Waiting for <span id="waiting-opp-name">your opponent</span> to finish…</p>
+        <div class="opp-progress">
+          <div class="opp-progress-bar"><div id="waiting-opp-bar" style="width:0%"></div></div>
+          <div class="opp-progress-label"><span id="waiting-opp-found">0</span> / <span id="waiting-opp-total">10</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROUND RESULTS -->
+    <section id="screen-results" class="screen">
+      <h2 class="results-title">Round results</h2>
+      <div class="results-scores" id="results-scores"></div>
+      <div class="answer-reveal">
+        <h3 id="results-prompt">…</h3>
+        <ol class="reveal-list" id="reveal-list"></ol>
+      </div>
+      <div class="scoreboard" id="results-scoreboard"></div>
+      <div class="actions" id="results-actions">
+        <button id="btn-end-2" class="big-btn ghost">End game</button>
+        <button id="btn-next" class="big-btn primary">Next round →</button>
+      </div>
+      <div id="results-waiting" class="waiting-banner" hidden>Waiting for host…</div>
+    </section>
+
+    <!-- FINAL -->
+    <section id="screen-final" class="screen">
+      <div class="confetti-canvas" id="confetti"></div>
+      <h2 class="final-title">🏆 Game Over 🏆</h2>
+      <p id="winner-text" class="winner-text">…</p>
+      <div class="final-scores" id="final-scores"></div>
+      <div id="final-history" class="final-history"></div>
+      <div class="actions">
+        <button id="btn-rematch" class="big-btn ghost">Rematch</button>
+        <button id="btn-new-game" class="big-btn primary">New game</button>
+      </div>
+    </section>
+
+    <!-- DISCONNECT BANNER -->
+    <div id="net-banner" class="net-banner" hidden>
+      <span id="net-banner-text">Opponent disconnected…</span>
+      <button id="net-banner-leave" class="small-btn">Leave</button>
+    </div>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="categories.js"></script>
+  <script src="net.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
