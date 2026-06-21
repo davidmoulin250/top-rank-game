@@ -65,6 +65,17 @@
               <option value="120">120s</option>
             </select>
           </label>
+          <label class="setting">
+            <span>Play to</span>
+            <select id="input-target">
+              <option value="">No limit</option>
+              <option value="50">50 pts</option>
+              <option value="100" selected>100 pts</option>
+              <option value="150">150 pts</option>
+              <option value="200">200 pts</option>
+              <option value="300">300 pts</option>
+            </select>
+          </label>
         </div>
         <button id="btn-start" class="big-btn primary">START GAME</button>
         <button id="btn-resume" class="link-btn" hidden>Resume previous game</button>
@@ -100,6 +111,17 @@
                 <option value="120">120s</option>
               </select>
             </label>
+            <label class="setting">
+              <span>Play to</span>
+              <select id="online-target">
+                <option value="">No limit</option>
+                <option value="50">50 pts</option>
+                <option value="100" selected>100 pts</option>
+                <option value="150">150 pts</option>
+                <option value="200">200 pts</option>
+                <option value="300">300 pts</option>
+              </select>
+            </label>
             <button id="btn-create-room" class="big-btn primary">CREATE ROOM</button>
           </div>
 
@@ -127,6 +149,7 @@
           <input id="lobby-link" readonly />
           <button id="btn-copy-link" class="small-btn">Copy link</button>
         </div>
+        <div id="lobby-rules" class="lobby-rules"></div>
       </div>
 
       <div class="lobby-players">

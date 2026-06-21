@@ -37,6 +37,7 @@
     currentCategoryId: null,
     roundNumber: 1,
     secondsPerTurn: 60,
+    targetScore: 100,            // null = no limit
     roundProgress: 'idle',       // local: idle|p0_done|both_done; online: idle|playing|done
     roundResults: [null, null],  // {matchedIndexes, score}
     playedIds: [],
@@ -123,6 +124,7 @@
     [p1, p2].forEach((el) => el.addEventListener('input', update));
     update();
 
+    const tgt = $('#input-target');
     btnStart.addEventListener('click', () => {
       if (!p1.value.trim() || !p2.value.trim()) return;
       state = defaultState();
@@ -130,6 +132,7 @@
       state.players[0].name = p1.value.trim().slice(0, 20);
       state.players[1].name = p2.value.trim().slice(0, 20);
       state.secondsPerTurn = parseInt(sec.value, 10) || 60;
+      state.targetScore = tgt.value ? parseInt(tgt.value, 10) : null;
       saveState();
       nextCategory();
     });
@@ -177,6 +180,7 @@
     name.addEventListener('keydown', (e) => { if (e.key === 'Enter') code.focus(); });
     code.addEventListener('keydown', (e) => { if (e.key === 'Enter' && code.value.length === 4) btnJoin.click(); });
 
+    const tgt = $('#online-target');
     btnCreate.addEventListener('click', async () => {
       const nm = name.value.trim().slice(0, 20);
       if (!nm) { showOnlineError('Enter your name first.'); name.focus(); return; }
@@ -191,6 +195,7 @@
         state.players[0].name = nm;
         state.players[1].name = '';
         state.secondsPerTurn = parseInt(sec.value, 10) || 60;
+        state.targetScore = tgt.value ? parseInt(tgt.value, 10) : null;
         attachNetHandlers();
         showLobby(code);
       } catch (err) {
@@ -244,8 +249,21 @@
     $('#lobby-p1').classList.toggle('connected', !!state.players[0].name && state.players[0].name !== '?');
     $('#lobby-p2').classList.toggle('connected', !!state.players[1].name);
     $('#lobby-p2').classList.toggle('waiting', !state.players[1].name);
+    renderLobbyRules();
     updateLobbyStartButton();
     showScreen('screen-lobby');
+  }
+
+  function renderLobbyRules() {
+    const rules = $('#lobby-rules');
+    if (!rules) return;
+    const pills = [
+      `<span class="rule-pill"><span class="lbl">⏱</span>${state.secondsPerTurn}s / turn</span>`,
+      state.targetScore
+        ? `<span class="rule-pill"><span class="lbl">🏁</span>First to ${state.targetScore} pts</span>`
+        : `<span class="rule-pill"><span class="lbl">∞</span>No score limit</span>`,
+    ];
+    rules.innerHTML = pills.join('');
   }
 
   function updateLobbyStartButton() {
@@ -332,6 +350,7 @@
       state.currentCategoryId = payload.categoryId;
       state.roundNumber = payload.roundNumber;
       state.secondsPerTurn = payload.secondsPerTurn;
+      if (payload.targetScore !== undefined) state.targetScore = payload.targetScore;
       state.roundResults = [null, null];
       state.roundProgress = 'idle';
       saveState();
@@ -388,6 +407,7 @@
         players: state.players,
         currentCategoryId: state.currentCategoryId,
         secondsPerTurn: state.secondsPerTurn,
+        targetScore: state.targetScore,
       });
     });
 
@@ -401,6 +421,7 @@
       state.players[0].name = (payload.players && payload.players[0]?.name) || state.players[0].name;
       state.players[1].name = (payload.players && payload.players[1]?.name) || state.players[1].name;
       state.secondsPerTurn = payload.secondsPerTurn || 60;
+      if (payload.targetScore !== undefined) state.targetScore = payload.targetScore;
       saveState();
     });
   }
@@ -437,6 +458,7 @@
         categoryId: cat.id,
         roundNumber: state.roundNumber,
         secondsPerTurn: state.secondsPerTurn,
+        targetScore: state.targetScore,
       });
     }
     showCategoryScreen();
@@ -470,15 +492,19 @@
   function renderScoreboard(container) {
     const p1 = state.players[0];
     const p2 = state.players[1];
+    const target = state.targetScore;
+    const tgtSuffix = target ? `<div class="target-progress">/ ${target}</div>` : '';
     container.innerHTML = `
       <div class="score-cell p1">
         <div class="pname">${escapeHtml(p1.name || '…')}</div>
         <div class="ppts">${p1.total}</div>
+        ${tgtSuffix}
       </div>
       <div class="divider"></div>
       <div class="score-cell p2">
         <div class="pname">${escapeHtml(p2.name || '…')}</div>
         <div class="ppts">${p2.total}</div>
+        ${tgtSuffix}
       </div>
     `;
   }
@@ -818,10 +844,18 @@
 
     renderScoreboard($('#results-scoreboard'));
 
+    // Target-score check: did anyone reach it?
+    const gameOver = !!state.targetScore && (p1.total >= state.targetScore || p2.total >= state.targetScore);
+    const btnNext = $('#btn-next');
+    btnNext.textContent = gameOver ? 'See final results →' : 'Next round →';
+    btnNext.dataset.gameOver = gameOver ? '1' : '';
+
     if (state.mode === 'online') {
       const isHost = state.role === 'host';
       $('#results-actions').hidden = !isHost;
       $('#results-waiting').hidden = isHost;
+      // Guest sees a different "waiting" message when the target was hit
+      $('#results-waiting').textContent = gameOver ? 'Waiting for host to show final results…' : 'Waiting for host…';
     } else {
       $('#results-actions').hidden = false;
       $('#results-waiting').hidden = true;
@@ -831,8 +865,13 @@
 
   function initResultsScreen() {
     $('#btn-next').addEventListener('click', () => {
+      const gameOver = $('#btn-next').dataset.gameOver === '1';
       delete state._resultsCommitted;
       saveState();
+      if (gameOver) {
+        endGame();
+        return;
+      }
       if (state.mode === 'online') Net.send('next_round', {});
       nextCategory();
     });
@@ -896,6 +935,7 @@
     $('#btn-rematch').addEventListener('click', () => {
       const names = state.players.map((p) => p.name);
       const sec = state.secondsPerTurn;
+      const tgt = state.targetScore;
       const mode = state.mode;
       const role = state.role;
       const me = state.me;
@@ -903,6 +943,7 @@
       state.players[0].name = names[0];
       state.players[1].name = names[1];
       state.secondsPerTurn = sec;
+      state.targetScore = tgt;
       state.mode = mode;
       state.role = role;
       state.me = me;
