@@ -1,0 +1,11 @@
+{
+  "extraKnownMarketplaces": {
+    "davidmoulin": {
+      "source": { "source": "github", "repo": "davidmoulin250/claude-workflow" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "flow@davidmoulin": true
+  }
+}

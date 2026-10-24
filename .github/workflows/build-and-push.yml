@@ -1,13 +1,18 @@
 name: Build and push image
 
+# `checks` runs on every PR and push; the image is built only after it passes,
+# and never for a pull request. Markdown and agent settings don't change the
+# image, so they don't trigger a run.
 on:
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - ".claude/**"
   push:
     branches: [main]
     paths-ignore:
-      - "README.md"
       - "**/*.md"
-      - ".github/**"
-      - "!.github/workflows/build-and-push.yml"
+      - ".claude/**"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +20,25 @@ permissions:
   packages: write
 
 jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # There is no build step to catch a typo, and categories.js is a large
+      # hand-edited file, so a syntax error would otherwise ship and break the game.
+      - name: Syntax check
+        run: for f in *.js; do node --check "$f"; done
+
   build-and-push:
+    needs: checks
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     concurrency:
       group: build-${{ github.ref }}

@@ -1,4 +1,6 @@
-.claude/
+# Local agent state stays out; the shared settings that enable the flow plugin are tracked.
+.claude/*
+!.claude/settings.json
 .DS_Store
 node_modules/
 .tmp-cats/
